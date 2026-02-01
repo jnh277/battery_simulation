@@ -1,6 +1,8 @@
 use std::fmt;
 use std::ops::{Add, Sub, Mul, Div, Neg};
 
+const min_value: f64 = 1e-10;
+
 /* --------------- ENERGY ------------------- */
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -128,7 +130,7 @@ impl Duration {
     pub fn from_hour(duration_hour: f64) -> Result<Self, f64> {
         if duration_hour.is_infinite() || duration_hour.is_nan() {
             Err(duration_hour)
-        } else if duration_hour <= 1e-15 { // force duration greater than 0
+        } else if duration_hour <= min_value { // force duration greater than 0
             Err(duration_hour)
         } else {
             Ok(Self(duration_hour))
@@ -168,7 +170,7 @@ impl Efficiency {
     pub fn from_fraction(fraction: f64) -> Result<Self, f64> {
         if fraction.is_infinite() || fraction.is_nan() {
             Err(fraction)
-        } else if fraction < 0.0 || fraction > 1.0 { // force duration greater than 0
+        } else if fraction <= min_value || fraction > 1.0 { // force duration greater than 0
             Err(fraction)
         } else {
             Ok(Self(fraction))
