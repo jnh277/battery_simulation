@@ -2,6 +2,7 @@ use std::fmt;
 use std::ops::{Add, Sub, Mul, Div, Neg};
 
 const min_value: f64 = 1e-10;
+const max_value: f64 = 1e6;  // this will be equivalent to 1 GIGA
 
 /* --------------- ENERGY ------------------- */
 
@@ -12,7 +13,9 @@ impl Energy {
     pub fn from_kwh(energy_kwh: f64) -> Result<Self, f64> {
         if energy_kwh.is_infinite() || energy_kwh.is_nan() {
             Err(energy_kwh)
-        } else {
+        } else if energy_kwh > max_value{
+            Err(energy_kwh)
+        }else {
             Ok(Self(energy_kwh))
         }
     }
@@ -74,6 +77,8 @@ impl Power {
     pub fn from_kw(power_kw: f64) -> Result<Self, f64> {
         if power_kw.is_infinite() || power_kw.is_nan() {
             Err(power_kw)
+        } else if power_kw > max_value {
+            Err(power_kw)
         } else {
             Ok(Self(power_kw))
         }
@@ -130,7 +135,7 @@ impl Duration {
     pub fn from_hour(duration_hour: f64) -> Result<Self, f64> {
         if duration_hour.is_infinite() || duration_hour.is_nan() {
             Err(duration_hour)
-        } else if duration_hour <= min_value { // force duration greater than 0
+        } else if duration_hour < min_value || duration_hour > max_value {
             Err(duration_hour)
         } else {
             Ok(Self(duration_hour))
