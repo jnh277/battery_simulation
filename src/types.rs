@@ -200,7 +200,7 @@ impl AsEfficiency for f64 {
     }
 }
 
-/* ----- Implenting display for our types ---- */
+/* ----- Implementing display for our types ---- */
 
 macro_rules! impl_display_with_unit {
     ($type:ty, $unit:expr) => {
