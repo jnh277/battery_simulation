@@ -14,11 +14,11 @@ impl BatteryState {
     }
 
     pub fn state_of_charge_kwh(&self) -> f64 {
-        self.state_of_charge.to_kwh()
+        self.state_of_charge.as_kwh()
     }
 
     pub fn power_kw(&self) -> f64 {
-        self.power.to_kw()
+        self.power.as_kw()
     }
 
     pub fn power(&self) -> Power {
@@ -316,7 +316,7 @@ mod tests {
     fn test_efficiency_returns_sqrt_of_round_trip() {
         let battery = Battery::new(100.0.kwh(), 50.0.kw(), 0.81.fraction())
             .expect("battery should be valid");
-        let one_way = battery.efficiency().to_fraction();
+        let one_way = battery.efficiency().as_fraction();
         assert_abs_diff_eq!(one_way, 0.9, epsilon = EPSILON);
     }
 
@@ -332,7 +332,7 @@ mod tests {
         let state = battery.init_state(95.0.kwh(), 0.0.kw()).expect("valid state");
         let max_power = battery.max_achievable_charge_power(&state, 1.0.hour());
         let expected = (100.0 - 95.0) / 1.0 / 0.9; // ~5.56 kW
-        assert_abs_diff_eq!(max_power.to_kw(), expected, epsilon = EPSILON);
+        assert_abs_diff_eq!(max_power.as_kw(), expected, epsilon = EPSILON);
     }
 
     #[test]
@@ -342,7 +342,7 @@ mod tests {
         // Empty battery, plenty of capacity - limited by max_power (50 kW)
         let state = battery.init_state(0.0.kwh(), 0.0.kw()).expect("valid state");
         let max_power = battery.max_achievable_charge_power(&state, 1.0.hour());
-        assert_abs_diff_eq!(max_power.to_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(max_power.as_kw(), 50.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -354,7 +354,7 @@ mod tests {
         let state = battery.init_state(5.0.kwh(), 0.0.kw()).expect("valid state");
         let max_power = battery.max_achievable_discharge_power(&state, 1.0.hour());
         let expected = 5.0 / 1.0 * 0.9; // 4.5 kW
-        assert_abs_diff_eq!(max_power.to_kw(), expected, epsilon = EPSILON);
+        assert_abs_diff_eq!(max_power.as_kw(), expected, epsilon = EPSILON);
     }
 
     #[test]
@@ -364,7 +364,7 @@ mod tests {
         // Full battery, plenty of energy - limited by max_power (50 kW)
         let state = battery.init_state(100.0.kwh(), 0.0.kw()).expect("valid state");
         let max_power = battery.max_achievable_discharge_power(&state, 1.0.hour());
-        assert_abs_diff_eq!(max_power.to_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(max_power.as_kw(), 50.0, epsilon = EPSILON);
     }
 
     /* --------------- CHARGE TESTS ------------------- */
@@ -377,8 +377,8 @@ mod tests {
         // Charge at 10 kW for 1 hour with 90% efficiency
         // Energy stored = 10 * 1 * 0.9 = 9 kWh
         let new_state = battery.charge(&state, 10.0.kw(), 1.0.hour()).expect("charge should succeed");
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), 9.0, epsilon = EPSILON);
-        assert_abs_diff_eq!(new_state.power().to_kw(), 10.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), 9.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 10.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -388,7 +388,7 @@ mod tests {
         let state = battery.init_state(0.0.kwh(), 0.0.kw()).expect("valid state");
         // Request 100 kW but max is 50 kW
         let new_state = battery.charge(&state, 100.0.kw(), 1.0.hour()).expect("charge should succeed");
-        assert_abs_diff_eq!(new_state.power().to_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 50.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -398,7 +398,7 @@ mod tests {
         let state = battery.init_state(90.0.kwh(), 0.0.kw()).expect("valid state");
         // Try to charge 50 kW for 1 hour (would add 45 kWh), but only 10 kWh capacity left
         let new_state = battery.charge(&state, 50.0.kw(), 1.0.hour()).expect("charge should succeed");
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), 100.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), 100.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -409,7 +409,7 @@ mod tests {
         // Charge at 20 kW for 2 hours with 90% efficiency
         // Energy stored = 20 * 2 * 0.9 = 36 kWh
         let new_state = battery.charge(&state, 20.0.kw(), 2.0.hour()).expect("charge should succeed");
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), 36.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), 36.0, epsilon = EPSILON);
     }
 
     /* --------------- DISCHARGE TESTS ------------------- */
@@ -423,8 +423,8 @@ mod tests {
         // Energy removed from battery = 10 / 0.9 = 11.11 kWh
         let new_state = battery.discharge(&state, 10.0.kw(), 1.0.hour()).expect("discharge should succeed");
         let expected_soc = 50.0 - (10.0 / 0.9);
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), expected_soc, epsilon = EPSILON);
-        assert_abs_diff_eq!(new_state.power().to_kw(), 10.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), expected_soc, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 10.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -434,7 +434,7 @@ mod tests {
         let state = battery.init_state(100.0.kwh(), 0.0.kw()).expect("valid state");
         // Request 100 kW but max is 50 kW
         let new_state = battery.discharge(&state, 100.0.kw(), 1.0.hour()).expect("discharge should succeed");
-        assert_abs_diff_eq!(new_state.power().to_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 50.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -444,7 +444,7 @@ mod tests {
         let state = battery.init_state(5.0.kwh(), 0.0.kw()).expect("valid state");
         // Try to discharge 50 kW for 1 hour, but only 5 kWh available
         let new_state = battery.discharge(&state, 50.0.kw(), 1.0.hour()).expect("discharge should succeed");
-        assert!(new_state.state_of_charge().to_kwh() >= 0.0);
+        assert!(new_state.state_of_charge().as_kwh() >= 0.0);
     }
 
     #[test]
@@ -456,7 +456,7 @@ mod tests {
         // Energy removed from battery = 18 * 2 / 0.9 = 40 kWh
         let new_state = battery.discharge(&state, 18.0.kw(), 2.0.hour()).expect("discharge should succeed");
         let expected_soc = 100.0 - (18.0 * 2.0 / 0.9);
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), expected_soc, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), expected_soc, epsilon = EPSILON);
     }
 
     /* --------------- STEP TESTS ------------------- */
@@ -468,7 +468,7 @@ mod tests {
         let state = battery.init_state(50.0.kwh(), 0.0.kw()).expect("valid state");
         let new_state = battery.step(&state, 10.0.kw(), 1.0.hour()).expect("step should succeed");
         // Positive power should charge: 50 + 10 * 1 * 0.9 = 59 kWh
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), 59.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), 59.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -479,7 +479,7 @@ mod tests {
         let new_state = battery.step(&state, (-10.0).kw(), 1.0.hour()).expect("step should succeed");
         // Negative power should discharge: 50 - 10 / 0.9 = 38.89 kWh
         let expected_soc = 50.0 - (10.0 / 0.9);
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), expected_soc, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), expected_soc, epsilon = EPSILON);
     }
 
     #[test]
@@ -488,8 +488,8 @@ mod tests {
             .expect("battery should be valid");
         let state = battery.init_state(50.0.kwh(), 10.0.kw()).expect("valid state");
         let new_state = battery.step(&state, 0.0.kw(), 1.0.hour()).expect("step should succeed");
-        assert_abs_diff_eq!(new_state.state_of_charge().to_kwh(), 50.0, epsilon = EPSILON);
-        assert_abs_diff_eq!(new_state.power().to_kw(), 0.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 0.0, epsilon = EPSILON);
     }
 
     /* --------------- INTEGRATION / ROUND-TRIP TESTS ------------------- */
@@ -502,13 +502,13 @@ mod tests {
 
         // Charge 10 kW for 1 hour: adds 10 * 0.9 = 9 kWh
         let after_charge = battery.charge(&state, 10.0.kw(), 1.0.hour()).expect("charge should succeed");
-        assert_abs_diff_eq!(after_charge.state_of_charge().to_kwh(), 59.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(after_charge.state_of_charge().as_kwh(), 59.0, epsilon = EPSILON);
 
         // Discharge 9 kW for 1 hour: removes 9 / 0.9 = 10 kWh from battery
         // But we only deliver 9 kWh to the grid
         let after_discharge = battery.discharge(&after_charge, 9.0.kw(), 1.0.hour()).expect("discharge should succeed");
         let expected_soc = 59.0 - (9.0 / 0.9); // 59 - 10 = 49 kWh
-        assert_abs_diff_eq!(after_discharge.state_of_charge().to_kwh(), expected_soc, epsilon = EPSILON);
+        assert_abs_diff_eq!(after_discharge.state_of_charge().as_kwh(), expected_soc, epsilon = EPSILON);
 
         // Net effect: put in 10 kWh (at grid), got out 9 kWh (at grid)
         // But battery SOC went 50 -> 59 -> 49 (net -1 kWh in battery)
@@ -527,7 +527,7 @@ mod tests {
         let state3 = battery.charge(&state2, 10.0.kw(), 1.0.hour()).expect("charge 3");
 
         // Each charge adds 10 * 0.9 = 9 kWh, total = 27 kWh
-        assert_abs_diff_eq!(state3.state_of_charge().to_kwh(), 27.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(state3.state_of_charge().as_kwh(), 27.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -542,7 +542,7 @@ mod tests {
         let state3 = battery.discharge(&state2, 9.0.kw(), 1.0.hour()).expect("discharge 3");
 
         // Each discharge removes 9 / 0.9 = 10 kWh, total removed = 30 kWh
-        assert_abs_diff_eq!(state3.state_of_charge().to_kwh(), 70.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(state3.state_of_charge().as_kwh(), 70.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -554,12 +554,12 @@ mod tests {
         // Simulate a day: charge in morning, discharge in evening
         let after_charge = battery.step(&state, 30.0.kw(), 2.0.hour()).expect("morning charge");
         // Added 30 * 2 * 0.9 = 54 kWh, SOC = 50 + 54 = 104, clamped to 100
-        assert_abs_diff_eq!(after_charge.state_of_charge().to_kwh(), 100.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(after_charge.state_of_charge().as_kwh(), 100.0, epsilon = EPSILON);
 
         let after_discharge = battery.step(&after_charge, (-40.0).kw(), 1.0.hour()).expect("evening discharge");
         // Removed 40 / 0.9 = 44.44 kWh, SOC = 100 - 44.44 = 55.56
         let expected = 100.0 - (40.0 / 0.9);
-        assert_abs_diff_eq!(after_discharge.state_of_charge().to_kwh(), expected, epsilon = EPSILON);
+        assert_abs_diff_eq!(after_discharge.state_of_charge().as_kwh(), expected, epsilon = EPSILON);
     }
 
     /* --------------- ACCESSOR TESTS ------------------- */
@@ -570,9 +570,9 @@ mod tests {
             .expect("battery should be valid");
         let state = battery.init_state(75.0.kwh(), 25.0.kw()).expect("valid state");
 
-        assert_abs_diff_eq!(state.state_of_charge().to_kwh(), 75.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(state.state_of_charge().as_kwh(), 75.0, epsilon = EPSILON);
         assert_abs_diff_eq!(state.state_of_charge_kwh(), 75.0, epsilon = EPSILON);
-        assert_abs_diff_eq!(state.power().to_kw(), 25.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(state.power().as_kw(), 25.0, epsilon = EPSILON);
         assert_abs_diff_eq!(state.power_kw(), 25.0, epsilon = EPSILON);
     }
 }

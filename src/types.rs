@@ -11,16 +11,14 @@ pub struct Energy(f64);
 
 impl Energy {
     pub fn from_kwh(energy_kwh: f64) -> Result<Self, f64> {
-        if energy_kwh.is_infinite() || energy_kwh.is_nan() {
+        if energy_kwh.is_infinite() || energy_kwh.is_nan() || energy_kwh > MAX_VALUE  {
             Err(energy_kwh)
-        } else if energy_kwh > MAX_VALUE {
-            Err(energy_kwh)
-        }else {
+        } else {
             Ok(Self(energy_kwh))
         }
     }
 
-    pub fn to_kwh(&self) -> f64 {
+    pub fn as_kwh(&self) -> f64 {
         self.0
     }
 
@@ -75,16 +73,14 @@ pub struct Power(f64);
 
 impl Power {
     pub fn from_kw(power_kw: f64) -> Result<Self, f64> {
-        if power_kw.is_infinite() || power_kw.is_nan() {
-            Err(power_kw)
-        } else if power_kw > MAX_VALUE {
+        if power_kw.is_infinite() || power_kw.is_nan() || power_kw > MAX_VALUE {
             Err(power_kw)
         } else {
             Ok(Self(power_kw))
         }
     }
 
-    pub fn to_kw(&self) -> f64 {
+    pub fn as_kw(&self) -> f64 {
         self.0
     }
 
@@ -133,16 +129,14 @@ pub struct Duration(f64);
 
 impl Duration {
     pub fn from_hour(duration_hour: f64) -> Result<Self, f64> {
-        if duration_hour.is_infinite() || duration_hour.is_nan() {
-            Err(duration_hour)
-        } else if duration_hour < MIN_VALUE || duration_hour > MAX_VALUE {
+        if duration_hour.is_infinite() || duration_hour.is_nan() || !(MIN_VALUE..=MAX_VALUE).contains(&duration_hour){
             Err(duration_hour)
         } else {
             Ok(Self(duration_hour))
         }
     }
 
-    pub fn to_hour(&self) -> f64 {
+    pub fn as_hour(&self) -> f64 {
         self.0
     }
 }
@@ -182,7 +176,7 @@ impl Efficiency {
         }
     }
 
-    pub fn to_fraction(&self) -> f64 {
+    pub fn as_fraction(&self) -> f64 {
         self.0
     }
 
@@ -335,7 +329,7 @@ mod tests {
     #[test]
     fn test_energy_to_kw() {
         let e:Energy = Energy::from_kwh(123.45).expect("finite values should be accepted");
-        let val:f64 = e.to_kwh();
+        let val:f64 = e.as_kwh();
         assert_abs_diff_eq!(val, 123.45, epsilon=EPSILON);
     }
 
@@ -447,7 +441,7 @@ mod tests {
     #[test]
     fn test_power_to_kw() {
         let p = Power::from_kw(123.45).expect("finite values should be accepted");
-        let val = p.to_kw();
+        let val = p.as_kw();
         assert_abs_diff_eq!(val, 123.45, epsilon = EPSILON);
     }
 
@@ -477,10 +471,10 @@ mod tests {
     #[test]
     fn test_power_abs() {
         let p = Power::from_kw(-50.0).expect("-50.0 should be valid");
-        assert_abs_diff_eq!(p.abs().to_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(p.abs().as_kw(), 50.0, epsilon = EPSILON);
 
         let p = Power::from_kw(50.0).expect("50.0 should be valid");
-        assert_abs_diff_eq!(p.abs().to_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(p.abs().as_kw(), 50.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -495,11 +489,11 @@ mod tests {
     fn test_power_neg() {
         let p = Power::from_kw(50.0).expect("50.0 should be valid");
         let neg_p = -p;
-        assert_abs_diff_eq!(neg_p.to_kw(), -50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(neg_p.as_kw(), -50.0, epsilon = EPSILON);
 
         let p = Power::from_kw(-50.0).expect("-50.0 should be valid");
         let neg_p = -p;
-        assert_abs_diff_eq!(neg_p.to_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(neg_p.as_kw(), 50.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -542,7 +536,7 @@ mod tests {
     #[test]
     fn test_duration_to_hour() {
         let d = Duration::from_hour(2.5).expect("finite values should be accepted");
-        let val = d.to_hour();
+        let val = d.as_hour();
         assert_abs_diff_eq!(val, 2.5, epsilon = EPSILON);
     }
 
@@ -624,7 +618,7 @@ mod tests {
     #[test]
     fn test_efficiency_to_fraction() {
         let e = Efficiency::from_fraction(0.85).expect("valid value should be accepted");
-        let val = e.to_fraction();
+        let val = e.as_fraction();
         assert_abs_diff_eq!(val, 0.85, epsilon = EPSILON);
     }
 
@@ -669,10 +663,10 @@ mod tests {
     #[test]
     fn test_efficiency_sqrt() {
         let e = Efficiency::from_fraction(0.81).expect("0.81 should be valid");
-        assert_abs_diff_eq!(e.sqrt().to_fraction(), 0.9, epsilon = EPSILON);
+        assert_abs_diff_eq!(e.sqrt().as_fraction(), 0.9, epsilon = EPSILON);
 
         let e = Efficiency::from_fraction(1.0).expect("1.0 should be valid");
-        assert_abs_diff_eq!(e.sqrt().to_fraction(), 1.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(e.sqrt().as_fraction(), 1.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -708,7 +702,7 @@ mod tests {
         let p = Power::from_kw(100.0).expect("100.0 should be valid");
         let d = Duration::from_hour(2.0).expect("2.0 should be valid");
         let e = p * d;
-        assert_abs_diff_eq!(e.to_kwh(), 200.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(e.as_kwh(), 200.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -716,7 +710,7 @@ mod tests {
         let p = Power::from_kw(100.0).expect("100.0 should be valid");
         let d = Duration::from_hour(2.0).expect("2.0 should be valid");
         let e = d * p;
-        assert_abs_diff_eq!(e.to_kwh(), 200.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(e.as_kwh(), 200.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -724,7 +718,7 @@ mod tests {
         let e = Energy::from_kwh(200.0).expect("200.0 should be valid");
         let d = Duration::from_hour(2.0).expect("2.0 should be valid");
         let p = e / d;
-        assert_abs_diff_eq!(p.to_kw(), 100.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(p.as_kw(), 100.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -732,7 +726,7 @@ mod tests {
         let p = Power::from_kw(80.0).expect("80.0 should be valid");
         let eff = Efficiency::from_fraction(0.8).expect("0.8 should be valid");
         let result = p / eff;
-        assert_abs_diff_eq!(result.to_kw(), 100.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(result.as_kw(), 100.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -740,7 +734,7 @@ mod tests {
         let p = Power::from_kw(100.0).expect("100.0 should be valid");
         let eff = Efficiency::from_fraction(0.8).expect("0.8 should be valid");
         let result = p * eff;
-        assert_abs_diff_eq!(result.to_kw(), 80.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(result.as_kw(), 80.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -748,7 +742,7 @@ mod tests {
         let p = Power::from_kw(100.0).expect("100.0 should be valid");
         let eff = Efficiency::from_fraction(0.8).expect("0.8 should be valid");
         let result = eff * p;
-        assert_abs_diff_eq!(result.to_kw(), 80.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(result.as_kw(), 80.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -756,7 +750,7 @@ mod tests {
         let e = Energy::from_kwh(80.0).expect("80.0 should be valid");
         let eff = Efficiency::from_fraction(0.8).expect("0.8 should be valid");
         let result = e / eff;
-        assert_abs_diff_eq!(result.to_kwh(), 100.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(result.as_kwh(), 100.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -764,7 +758,7 @@ mod tests {
         let e = Energy::from_kwh(100.0).expect("100.0 should be valid");
         let eff = Efficiency::from_fraction(0.8).expect("0.8 should be valid");
         let result = e * eff;
-        assert_abs_diff_eq!(result.to_kwh(), 80.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(result.as_kwh(), 80.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -772,7 +766,7 @@ mod tests {
         let e = Energy::from_kwh(100.0).expect("100.0 should be valid");
         let eff = Efficiency::from_fraction(0.8).expect("0.8 should be valid");
         let result = eff * e;
-        assert_abs_diff_eq!(result.to_kwh(), 80.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(result.as_kwh(), 80.0, epsilon = EPSILON);
     }
 
     /* --------------- DISPLAY TESTS ------------------- */
