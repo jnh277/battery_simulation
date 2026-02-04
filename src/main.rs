@@ -1,10 +1,8 @@
-mod battery;
-mod types;
-mod control;
 
-use battery::{Battery, BatteryState};
-use types::{AsPower, AsEnergy, AsEfficiency, AsDuration, Power};
-use control::LoadFollowing;
+
+use battery_sim::battery::{Battery, BatteryState};
+use battery_sim::types::{AsPower, AsEnergy, AsEfficiency, AsDuration, Power};
+use battery_sim::control::LoadFollowing;
 
 fn main() {
     let battery = Battery::new(

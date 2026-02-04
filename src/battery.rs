@@ -1,4 +1,4 @@
-use crate::types::{AsEnergy, Energy, Power, AsPower, Duration, AsDuration, Efficiency, AsEfficiency};
+use crate::types::{AsEnergy, Energy, Power, AsPower, Duration, Efficiency};
 
 pub struct BatteryState {
     state_of_charge: Energy, // the current energy that the battery has
@@ -190,6 +190,7 @@ impl Battery {
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
+    use crate::types::{AsDuration, AsEfficiency};
     const EPSILON: f64 = 1e-9;
 
     /* --------------- BATTERY CONSTRUCTION TESTS ------------------- */
