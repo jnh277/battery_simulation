@@ -1,8 +1,10 @@
 mod battery;
 mod types;
+mod control;
 
 use battery::{Battery, BatteryState};
-use types::{AsPower, AsEnergy, AsEfficiency, AsDuration};
+use types::{AsPower, AsEnergy, AsEfficiency, AsDuration, Power};
+use control::LoadFollowing;
 
 fn main() {
     let battery = Battery::new(
@@ -27,5 +29,20 @@ fn main() {
 
     println!("State of charge {:.2}kWh", new_state_2.state_of_charge());
     println!("Achieved power: {:.2}kW", new_state_2.power());
+
+
+    let generation: Power = 5.0.kw();
+    let consumption: Power = 3.0.kw();
+
+    let controller: LoadFollowing = LoadFollowing::new();
+
+    let target: Power = controller.decide(generation, consumption);
+
+    let new_state_3: BatteryState = battery.charge(&new_state_2, target, 0.5.hour()).expect("ok");
+
+    println!("Target power {:.2}kW", target);
+    println!("State of charge {:.2}kWh", new_state_3.state_of_charge());
+    println!("Achieved power {:.2}kW", new_state_3.power());
+
 
 }

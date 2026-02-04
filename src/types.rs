@@ -32,6 +32,7 @@ impl Energy {
 }
 
 
+
 impl Add for Energy {
     type Output = Energy;
     fn add(self, rhs: Energy) -> Energy {
@@ -99,6 +100,14 @@ impl Neg for Power {
 
     fn neg(self) -> Power {
         Power(-self.0)
+    }
+}
+
+impl Sub for Power {
+    type Output = Power;
+
+    fn sub(self, rhs: Power) -> Power {
+        Power(self.0 - rhs.0)
     }
 }
 
