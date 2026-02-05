@@ -18,6 +18,13 @@ impl Energy {
         }
     }
 
+    pub const fn from_kwh_const(energy_kwh: f64) -> Self {
+        if energy_kwh.is_infinite() || energy_kwh.is_nan() || energy_kwh > MAX_VALUE  {
+            panic!("Invalid energy value.")
+        }
+        Self(energy_kwh)
+    }
+
     pub fn as_kwh(&self) -> f64 {
         self.0
     }
@@ -29,8 +36,17 @@ impl Energy {
     pub fn max(self, other: Energy) -> Energy {
         Energy(self.0.max(other.0))
     }
+
+    pub fn zero() -> Energy {
+        Energy(0.0)
+    }
 }
 
+
+#[macro_export]
+macro_rules! kwh {
+    ($energy_kwh:expr) => {{const {Energy::from_kwh_const($energy_kwh)}}};
+}
 
 
 impl Add for Energy {
@@ -46,24 +62,27 @@ impl Sub for Energy {
         Energy(self.0 - rhs.0)
     }
 }
-
+#[derive(Debug, thiserror::Error)]
+#[error("Failed to convert {0} to energy.")]
+pub struct EnergyConversionError(f64);
 pub trait AsEnergy {
-    fn mwh(self) -> Energy;
+    fn mwh(self) -> Result<Energy, EnergyConversionError>;
 
-    fn kwh(self) -> Energy;
+    fn kwh(self) -> Result<Energy, EnergyConversionError>;
 
-    fn wh(self) -> Energy;
+    fn wh(self) -> Result<Energy, EnergyConversionError>;
+
 }
 
 impl AsEnergy for f64 {
-    fn mwh(self) -> Energy {
-        Energy::from_kwh(self * 1_000.).expect("Invalid energy value")
+    fn mwh(self) -> Result<Energy, EnergyConversionError> {
+        Energy::from_kwh(self * 1_000.).map_err(EnergyConversionError)
     }
-    fn kwh(self) -> Energy {
-        Energy::from_kwh(self).expect("Invalid energy value")
+    fn kwh(self) -> Result<Energy, EnergyConversionError> {
+        Energy::from_kwh(self).map_err(EnergyConversionError)
     }
-    fn wh(self) -> Energy {
-        Energy::from_kwh(self / 1_000.).expect("Invalid energy value")
+    fn wh(self) -> Result<Energy, EnergyConversionError> {
+        Energy::from_kwh(self / 1_000.).map_err(EnergyConversionError)
     }
 }
 
@@ -81,6 +100,14 @@ impl Power {
         }
     }
 
+    pub const fn from_kw_const(power_kw: f64) -> Self {
+        if power_kw.is_infinite() || power_kw.is_nan() || power_kw > MAX_VALUE {
+            panic!("Invalid power value.")
+        } else {
+            Self(power_kw)
+        }
+    }
+
     pub fn as_kw(&self) -> f64 {
         self.0
     }
@@ -91,9 +118,18 @@ impl Power {
 
     pub fn min(self, other: Power) -> Power {
         Power(self.0.min(other.0))
+
+    }
+
+    pub fn zero() -> Self {
+        Self(0.0)
     }
 }
 
+#[macro_export]
+macro_rules! kw {
+    ($power_kw:expr) => {{const {Power::from_kw_const($power_kw)}}};
+}
 
 impl Neg for Power {
     type Output = Power;
@@ -111,23 +147,28 @@ impl Sub for Power {
     }
 }
 
+#[derive(Debug, thiserror::Error)]
+#[error("Failed to convert {0} to energy.")]
+pub struct PowerConversionError(f64);
+
+
 pub trait AsPower {
-    fn mw(self) -> Power;
+    fn mw(self) -> Result<Power, PowerConversionError>;
 
-    fn kw(self) -> Power;
+    fn kw(self) -> Result<Power, PowerConversionError>;
 
-    fn watt(self) -> Power;
+    fn watt(self) -> Result<Power, PowerConversionError>;
 }
 
 impl AsPower for f64 {
-    fn mw(self) -> Power {
-        Power::from_kw(self * 1_000.).expect("Invalid power value")
+    fn mw(self) -> Result<Power, PowerConversionError> {
+        Power::from_kw(self * 1_000.).map_err(PowerConversionError)
     }
-    fn kw(self) -> Power {
-        Power::from_kw(self).expect("Invalid power value")
+    fn kw(self) -> Result<Power, PowerConversionError> {
+        Power::from_kw(self).map_err(PowerConversionError)
     }
-    fn watt(self) -> Power {
-        Power::from_kw(self / 1_000.).expect("Invalid power value")
+    fn watt(self) -> Result<Power, PowerConversionError> {
+        Power::from_kw(self / 1_000.).map_err(PowerConversionError)
     }
 }
 
@@ -145,28 +186,49 @@ impl Duration {
         }
     }
 
+    pub const fn from_hour_const(duration_hour: f64) -> Self {
+        if duration_hour.is_infinite()
+            || duration_hour.is_nan()
+            || duration_hour < MIN_VALUE
+            || duration_hour > MAX_VALUE
+        {
+            panic!("Invalid duration value.")
+        } else {
+            Self(duration_hour)
+        }
+    }
+
     pub fn as_hour(&self) -> f64 {
         self.0
     }
 }
 
+#[macro_export]
+macro_rules! hour {
+    ($hour:expr) => {{const {Duration::from_hour_const($hour)}}};
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("Failed to convert {0} to energy.")]
+pub struct DurationConversionError(f64);
+
 pub trait AsDuration {
-    fn hour(self) -> Duration;
+    fn hour(self) -> Result<Duration, DurationConversionError>;
 
-    fn minute(self) -> Duration;
+    fn minute(self) -> Result<Duration, DurationConversionError>;
 
-    fn second(self) -> Duration;
+    fn second(self) -> Result<Duration, DurationConversionError>;
 }
 
 impl AsDuration for f64 {
-    fn hour(self) -> Duration {
-        Duration::from_hour(self).expect("Invalid duration value")
+    fn hour(self) -> Result<Duration, DurationConversionError> {
+        Duration::from_hour(self).map_err(DurationConversionError)
     }
-    fn minute(self) -> Duration {
-        Duration::from_hour(self / 60.).expect("Invalid duration value")
+    fn minute(self) -> Result<Duration, DurationConversionError> {
+        Duration::from_hour(self / 60.).map_err(DurationConversionError)
     }
-    fn second(self) -> Duration {
-        Duration::from_hour(self / 3600.).expect("Invalid duration value")
+    fn second(self) -> Result<Duration, DurationConversionError> {
+        Duration::from_hour(self / 3600.).map_err(DurationConversionError)
     }
 }
 
@@ -377,22 +439,22 @@ mod tests {
 
     #[test]
     fn test_as_energy() {
-        let e:Energy = 1.5.kwh();
+        let e:Energy = Energy(1.5);
         assert_abs_diff_eq!(e.0, 1.5, epsilon=EPSILON);
 
-        let e:Energy = (-5.1).kwh();
+        let e:Energy = Energy(-5.1);
         assert_abs_diff_eq!(e.0, -5.1, epsilon=EPSILON);
 
-        let e:Energy = 4.2.mwh();
+        let e:Energy = Energy(4.2);
         assert_abs_diff_eq!(e.0, 4200., epsilon=EPSILON);
 
-        let e:Energy = (-5.1).mwh();
+        let e:Energy = Energy(-5.1);
         assert_abs_diff_eq!(e.0, -5100., epsilon=EPSILON);
 
-        let e:Energy = (-4.2).wh();
+        let e:Energy = Energy(-4.2);
         assert_abs_diff_eq!(e.0, -4.2e-3, epsilon=EPSILON);
 
-        let e:Energy = 4.2.wh();
+        let e:Energy = Energy(4.2);
         assert_abs_diff_eq!(e.0, 4.2e-3, epsilon=EPSILON);
 
     }
@@ -507,13 +569,13 @@ mod tests {
 
     #[test]
     fn test_as_power() {
-        let p = 1.5.kw();
+        let p = 1.5.kw().expect("Ok");
         assert_abs_diff_eq!(p.0, 1.5, epsilon = EPSILON);
 
-        let p = 4.2.mw();
+        let p = 4.2.mw().expect("Ok");
         assert_abs_diff_eq!(p.0, 4200., epsilon = EPSILON);
 
-        let p = 4200.0.watt();
+        let p = 4200.0.watt().expect("Ok");
         assert_abs_diff_eq!(p.0, 4.2, epsilon = EPSILON);
     }
 
@@ -586,13 +648,13 @@ mod tests {
 
     #[test]
     fn test_as_duration() {
-        let d = 1.5.hour();
+        let d = 1.5.hour().expect("Ok");
         assert_abs_diff_eq!(d.0, 1.5, epsilon = EPSILON);
 
-        let d = 90.0.minute();
+        let d = 90.0.minute().expect("Ok");
         assert_abs_diff_eq!(d.0, 1.5, epsilon = EPSILON);
 
-        let d = 3600.0.second();
+        let d = 3600.0.second().expect("Ok");
         assert_abs_diff_eq!(d.0, 1.0, epsilon = EPSILON);
     }
 

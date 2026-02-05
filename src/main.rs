@@ -1,17 +1,23 @@
 
 
 use battery_sim::battery::{Battery, BatteryState};
-use battery_sim::types::{AsPower, AsEnergy, AsEfficiency, AsDuration, Power};
+use battery_sim::types::{AsPower, AsEnergy, AsEfficiency, AsDuration, Power, Energy};
 use battery_sim::control::LoadFollowing;
+use battery_sim::kwh;
 
 fn main() {
+    let x: f64 = 10.;
+
+    x.kw();
+
+
     let battery = Battery::new(
-        10.0.kwh(),  // 10 kWh capacity (like a Powerwall)
+        kwh!(10.),
         5.0.kw(),   // 5 kW max power
         0.90.fraction(),   // 90% round-trip efficiency
     ).expect("OK");
     let state = battery.init_state(
-        0.0.kwh(),
+        Energy::zero(),
         0.0.kw()
     ).expect("ok");
 
