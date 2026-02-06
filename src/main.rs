@@ -1,8 +1,7 @@
 
 
 use battery_sim::battery::{Battery, BatteryState};
-use battery_sim::types::{AsEfficiency, Power, Energy, Duration};
-use battery_sim::control::LoadFollowing;
+use battery_sim::types::{AsEfficiency, Power, Energy, Duration, TelemetryPoint};
 use battery_sim::{kwh, kw, hour};
 
 fn main() {
@@ -33,13 +32,19 @@ fn main() {
     let generation: Power = kw!(5.0);
     let consumption: Power = kw!(3.0);
 
-    let controller: LoadFollowing = LoadFollowing::new();
+    let telemetry_point: TelemetryPoint = TelemetryPoint::new(
+        hour!(0.5),
+        generation,
+        consumption
+    );
 
-    let target: Power = controller.decide(generation, consumption);
+    // let new_state_3: BatteryState = battery.charge(&new_state_2, target, hour!(0.5)).expect("ok");
+    let new_state_3: BatteryState = battery.load_follow_step(
+        &new_state_2,
+        &telemetry_point,
+    ).expect("Ok");
 
-    let new_state_3: BatteryState = battery.charge(&new_state_2, target, hour!(0.5)).expect("ok");
-
-    println!("Target power {:.2}kW", target);
+    println!("Excess gen {:.2}kW", telemetry_point.excess_pv());
     println!("State of charge {:.2}kWh", new_state_3.state_of_charge());
     println!("Achieved power {:.2}kW", new_state_3.power());
 

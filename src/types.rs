@@ -379,6 +379,30 @@ impl Mul<Energy> for Efficiency {
 }
 
 
+pub struct TelemetryPoint {
+    duration: Duration,
+    solar_power: Power,
+    load_power: Power,
+}
+
+impl TelemetryPoint {
+    pub fn new(duration: Duration, solar_power: Power, load_power: Power) -> Self {
+        TelemetryPoint{
+            duration,
+            solar_power,
+            load_power,
+        }
+    }
+
+    pub fn duration(&self) -> Duration {
+        self.duration
+    }
+
+    pub fn excess_pv(&self) -> Power {
+        self.solar_power - self.load_power
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

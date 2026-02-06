@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use crate::types::{AsEnergy, Energy, Power, AsPower, Duration, Efficiency};
+use crate::types::{AsEnergy, Energy, Power, AsPower, Duration, Efficiency, TelemetryPoint};
 
 pub struct BatteryState {
     state_of_charge: Energy, // the current energy that the battery has
@@ -175,6 +175,15 @@ impl Battery {
                 power: Power::zero(),
             })
         }
+    }
+
+    pub fn load_follow_step(
+        &self,
+        battery_state: &BatteryState,
+        telemetry_point: &TelemetryPoint,
+    ) -> Result<BatteryState, BatteryError> {
+        let desired_power: Power = telemetry_point.excess_pv();
+        self.step(battery_state, desired_power, telemetry_point.duration())
     }
 }
 
