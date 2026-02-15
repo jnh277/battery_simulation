@@ -1,5 +1,4 @@
-use std::fmt::{Display, Formatter};
-use crate::types::{AsEnergy, Energy, Power, AsPower, Duration, Efficiency, TelemetryPoint};
+use crate::types::{Energy, Power, Duration, Efficiency, TelemetryPoint};
 
 #[derive(Clone, Copy)]
 pub struct BatteryState {

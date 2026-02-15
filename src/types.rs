@@ -463,22 +463,22 @@ mod tests {
 
     #[test]
     fn test_as_energy() {
-        let e:Energy = Energy(1.5);
+        let e:Energy =(1.5).kwh().expect("ok");
         assert_abs_diff_eq!(e.0, 1.5, epsilon=EPSILON);
 
-        let e:Energy = Energy(-5.1);
+        let e:Energy = (-5.1).kwh().expect("ok");
         assert_abs_diff_eq!(e.0, -5.1, epsilon=EPSILON);
 
-        let e:Energy = Energy(4.2);
+        let e:Energy = (4.2).mwh().expect("ok");
         assert_abs_diff_eq!(e.0, 4200., epsilon=EPSILON);
 
-        let e:Energy = Energy(-5.1);
+        let e:Energy = (-5.1).mwh().expect("ok");
         assert_abs_diff_eq!(e.0, -5100., epsilon=EPSILON);
 
-        let e:Energy = Energy(-4.2);
+        let e:Energy = (-4.2).wh().expect("ok");
         assert_abs_diff_eq!(e.0, -4.2e-3, epsilon=EPSILON);
 
-        let e:Energy = Energy(4.2);
+        let e:Energy = (4.2).wh().expect("ok");
         assert_abs_diff_eq!(e.0, 4.2e-3, epsilon=EPSILON);
 
     }

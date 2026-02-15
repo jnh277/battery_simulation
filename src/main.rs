@@ -1,6 +1,6 @@
 
 
-use battery_sim::battery::{Battery, BatteryState};
+use battery_sim::battery::{Battery};
 use battery_sim::types::{AsEfficiency, Power, Energy, Duration, TelemetryPoint};
 use battery_sim::{kwh, kw, hour};
 use battery_sim::simulation::simulate_load_following;
