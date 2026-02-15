@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use crate::types::{AsEnergy, Energy, Power, AsPower, Duration, Efficiency, TelemetryPoint};
 
+#[derive(Clone, Copy)]
 pub struct BatteryState {
     state_of_charge: Energy, // the current energy that the battery has
     power: Power,           // the battery power

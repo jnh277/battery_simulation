@@ -3,6 +3,7 @@
 use battery_sim::battery::{Battery, BatteryState};
 use battery_sim::types::{AsEfficiency, Power, Energy, Duration, TelemetryPoint};
 use battery_sim::{kwh, kw, hour};
+use battery_sim::simulation::simulate_load_following;
 
 fn main() {
     let battery = Battery::new(
@@ -14,9 +15,6 @@ fn main() {
         Energy::zero(),
         Power::zero()
     ).expect("ok");
-    let mut states: Vec<BatteryState> = Vec::new();
-    states.push(state);
-
 
     let telemetry_points: Vec<TelemetryPoint> = vec![
         TelemetryPoint::new(hour!(0.5), kw!(3.0), kw!(0.0)),
@@ -25,12 +23,11 @@ fn main() {
         TelemetryPoint::new(hour!(0.5), kw!(0.0), kw!(2.5)),
     ];
 
-    for point in &telemetry_points {
-        match battery.load_follow_step(&states.last().expect("OK"), point) {
-            Ok(new_state) => states.push(new_state),
-            Err(e) => println!("Error: {:?}", e),
-        }
-    }
+    let states = simulate_load_following(
+        telemetry_points,
+        battery,
+        state
+    ).expect("OK");
 
     for state in states {
         println!("battery power {:.2}", state.power());
