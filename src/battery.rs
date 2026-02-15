@@ -578,4 +578,51 @@ mod tests {
         assert_abs_diff_eq!(state.power().as_kw(), 25.0, epsilon = EPSILON);
         assert_abs_diff_eq!(state.power_kw(), 25.0, epsilon = EPSILON);
     }
+
+    /* --------------- LOAD FOLLOW STEP TESTS ------------------- */
+
+    #[test]
+    fn test_load_follow_step_positive_excess_pv_charges() {
+        let battery = Battery::new(kwh!(100.0), kw!(50.0), 0.81.fraction())
+            .expect("battery should be valid");
+        let state = battery.init_state(kwh!(50.0), Power::zero()).expect("valid state");
+
+        // Solar 10 kW, Load 3 kW -> excess 7 kW charges battery
+        let telemetry = TelemetryPoint::new(hour!(1.0), kw!(10.0), kw!(3.0));
+        let new_state = battery.load_follow_step(&state, &telemetry).expect("step should succeed");
+
+        // Charged at 7 kW for 1 hour with 90% efficiency: 50 + 7 * 1 * 0.9 = 56.3 kWh
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), 56.3, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 7.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_load_follow_step_negative_excess_pv_discharges() {
+        let battery = Battery::new(kwh!(100.0), kw!(50.0), 0.81.fraction())
+            .expect("battery should be valid");
+        let state = battery.init_state(kwh!(50.0), Power::zero()).expect("valid state");
+
+        // Solar 3 kW, Load 10 kW -> deficit 7 kW discharges battery
+        let telemetry = TelemetryPoint::new(hour!(1.0), kw!(3.0), kw!(10.0));
+        let new_state = battery.load_follow_step(&state, &telemetry).expect("step should succeed");
+
+        // Discharged at 7 kW for 1 hour with 90% efficiency: 50 - 7 / 0.9 = 42.22 kWh
+        let expected_soc = 50.0 - (7.0 / 0.9);
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), expected_soc, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 7.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_load_follow_step_zero_excess_pv_maintains_state() {
+        let battery = Battery::new(kwh!(100.0), kw!(50.0), 0.81.fraction())
+            .expect("battery should be valid");
+        let state = battery.init_state(kwh!(50.0), Power::zero()).expect("valid state");
+
+        // Solar 5 kW, Load 5 kW -> no excess, battery unchanged
+        let telemetry = TelemetryPoint::new(hour!(1.0), kw!(5.0), kw!(5.0));
+        let new_state = battery.load_follow_step(&state, &telemetry).expect("step should succeed");
+
+        assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), 0.0, epsilon = EPSILON);
+    }
 }

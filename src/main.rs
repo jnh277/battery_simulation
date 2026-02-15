@@ -14,39 +14,25 @@ fn main() {
         Energy::zero(),
         Power::zero()
     ).expect("ok");
+    let mut states: Vec<BatteryState> = Vec::new();
+    states.push(state);
 
 
-    println!("Initial SoC: {:.1}", state.state_of_charge());
+    let telemetry_points: Vec<TelemetryPoint> = vec![
+        TelemetryPoint::new(hour!(0.5), kw!(3.0), kw!(0.0)),
+        TelemetryPoint::new(hour!(0.5), kw!(2.5), kw!(0.0)),
+        TelemetryPoint::new(hour!(0.5), kw!(0.0), kw!(3.0)),
+        TelemetryPoint::new(hour!(0.5), kw!(0.0), kw!(2.5)),
+    ];
 
-    let new_state_1: BatteryState = battery.charge(&state, kw!(3.0), hour!(0.5)).expect("ok");
+    for point in &telemetry_points {
+        match battery.load_follow_step(&states.last().expect("OK"), point) {
+            Ok(new_state) => states.push(new_state),
+            Err(e) => println!("Error: {:?}", e),
+        }
+    }
 
-    println!("New state of charge {:.2}kWh", new_state_1.state_of_charge());
-    println!("Achieved charge power {:.2}kW", new_state_1.power());
-
-    let new_state_2: BatteryState = battery.step(&new_state_1, kw!(-5.0), hour!(0.5)).expect("ok");
-
-    println!("State of charge {:.2}kWh", new_state_2.state_of_charge());
-    println!("Achieved power: {:.2}kW", new_state_2.power());
-
-
-    let generation: Power = kw!(5.0);
-    let consumption: Power = kw!(3.0);
-
-    let telemetry_point: TelemetryPoint = TelemetryPoint::new(
-        hour!(0.5),
-        generation,
-        consumption
-    );
-
-    // let new_state_3: BatteryState = battery.charge(&new_state_2, target, hour!(0.5)).expect("ok");
-    let new_state_3: BatteryState = battery.load_follow_step(
-        &new_state_2,
-        &telemetry_point,
-    ).expect("Ok");
-
-    println!("Excess gen {:.2}kW", telemetry_point.excess_pv());
-    println!("State of charge {:.2}kWh", new_state_3.state_of_charge());
-    println!("Achieved power {:.2}kW", new_state_3.power());
-
-
+    for state in states {
+        println!("battery power {:.2}", state.power());
+    }
 }

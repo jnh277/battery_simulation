@@ -897,4 +897,33 @@ mod tests {
         assert_eq!(format!("{:.1}", e), "0.8 %");
         assert_eq!(format!("{:.4}", e), "0.8500 %");
     }
+
+    /* --------------- TELEMETRY POINT TESTS ------------------- */
+
+    #[test]
+    fn test_telemetry_point_excess_pv_positive() {
+        // Solar 10 kW, Load 3 kW -> excess 7 kW
+        let tp = TelemetryPoint::new(hour!(0.5), kw!(10.0), kw!(3.0));
+        assert_abs_diff_eq!(tp.excess_pv().as_kw(), 7.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_telemetry_point_excess_pv_negative() {
+        // Solar 3 kW, Load 10 kW -> excess -7 kW
+        let tp = TelemetryPoint::new(hour!(0.5), kw!(3.0), kw!(10.0));
+        assert_abs_diff_eq!(tp.excess_pv().as_kw(), -7.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_telemetry_point_excess_pv_zero() {
+        // Solar 5 kW, Load 5 kW -> excess 0 kW
+        let tp = TelemetryPoint::new(hour!(0.5), kw!(5.0), kw!(5.0));
+        assert_abs_diff_eq!(tp.excess_pv().as_kw(), 0.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_telemetry_point_duration_accessor() {
+        let tp = TelemetryPoint::new(hour!(0.25), kw!(10.0), kw!(5.0));
+        assert_abs_diff_eq!(tp.duration().as_hour(), 0.25, epsilon = EPSILON);
+    }
 }
