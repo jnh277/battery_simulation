@@ -463,22 +463,22 @@ mod tests {
 
     #[test]
     fn test_as_energy() {
-        let e:Energy = Energy(1.5);
+        let e:Energy =(1.5).kwh().expect("ok");
         assert_abs_diff_eq!(e.0, 1.5, epsilon=EPSILON);
 
-        let e:Energy = Energy(-5.1);
+        let e:Energy = (-5.1).kwh().expect("ok");
         assert_abs_diff_eq!(e.0, -5.1, epsilon=EPSILON);
 
-        let e:Energy = Energy(4.2);
+        let e:Energy = (4.2).mwh().expect("ok");
         assert_abs_diff_eq!(e.0, 4200., epsilon=EPSILON);
 
-        let e:Energy = Energy(-5.1);
+        let e:Energy = (-5.1).mwh().expect("ok");
         assert_abs_diff_eq!(e.0, -5100., epsilon=EPSILON);
 
-        let e:Energy = Energy(-4.2);
+        let e:Energy = (-4.2).wh().expect("ok");
         assert_abs_diff_eq!(e.0, -4.2e-3, epsilon=EPSILON);
 
-        let e:Energy = Energy(4.2);
+        let e:Energy = (4.2).wh().expect("ok");
         assert_abs_diff_eq!(e.0, 4.2e-3, epsilon=EPSILON);
 
     }
@@ -896,5 +896,34 @@ mod tests {
         assert_eq!(format!("{}", e), "0.85 %");
         assert_eq!(format!("{:.1}", e), "0.8 %");
         assert_eq!(format!("{:.4}", e), "0.8500 %");
+    }
+
+    /* --------------- TELEMETRY POINT TESTS ------------------- */
+
+    #[test]
+    fn test_telemetry_point_excess_pv_positive() {
+        // Solar 10 kW, Load 3 kW -> excess 7 kW
+        let tp = TelemetryPoint::new(hour!(0.5), kw!(10.0), kw!(3.0));
+        assert_abs_diff_eq!(tp.excess_pv().as_kw(), 7.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_telemetry_point_excess_pv_negative() {
+        // Solar 3 kW, Load 10 kW -> excess -7 kW
+        let tp = TelemetryPoint::new(hour!(0.5), kw!(3.0), kw!(10.0));
+        assert_abs_diff_eq!(tp.excess_pv().as_kw(), -7.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_telemetry_point_excess_pv_zero() {
+        // Solar 5 kW, Load 5 kW -> excess 0 kW
+        let tp = TelemetryPoint::new(hour!(0.5), kw!(5.0), kw!(5.0));
+        assert_abs_diff_eq!(tp.excess_pv().as_kw(), 0.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_telemetry_point_duration_accessor() {
+        let tp = TelemetryPoint::new(hour!(0.25), kw!(10.0), kw!(5.0));
+        assert_abs_diff_eq!(tp.duration().as_hour(), 0.25, epsilon = EPSILON);
     }
 }
