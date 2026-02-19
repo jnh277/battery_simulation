@@ -1,8 +1,8 @@
 use std::fmt;
-use std::ops::{Add, Sub, Mul, Div, Neg};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 const MIN_VALUE: f64 = 1e-10;
-const MAX_VALUE: f64 = 1e6;  // this will be equivalent to 1 GIGA
+const MAX_VALUE: f64 = 1e6; // this will be equivalent to 1 GIGA
 
 /* --------------- ENERGY ------------------- */
 
@@ -11,7 +11,7 @@ pub struct Energy(f64);
 
 impl Energy {
     pub fn from_kwh(energy_kwh: f64) -> Result<Self, f64> {
-        if energy_kwh.is_infinite() || energy_kwh.is_nan() || energy_kwh > MAX_VALUE  {
+        if energy_kwh.is_infinite() || energy_kwh.is_nan() || energy_kwh > MAX_VALUE {
             Err(energy_kwh)
         } else {
             Ok(Self(energy_kwh))
@@ -19,7 +19,7 @@ impl Energy {
     }
 
     pub const fn from_kwh_const(energy_kwh: f64) -> Self {
-        if energy_kwh.is_infinite() || energy_kwh.is_nan() || energy_kwh > MAX_VALUE  {
+        if energy_kwh.is_infinite() || energy_kwh.is_nan() || energy_kwh > MAX_VALUE {
             panic!("Invalid energy value.")
         }
         Self(energy_kwh)
@@ -42,12 +42,10 @@ impl Energy {
     }
 }
 
-
 #[macro_export]
 macro_rules! kwh {
-    ($energy_kwh:expr) => {{const {Energy::from_kwh_const($energy_kwh)}}};
+    ($energy_kwh:expr) => {{ const { Energy::from_kwh_const($energy_kwh) } }};
 }
-
 
 impl Add for Energy {
     type Output = Energy;
@@ -65,13 +63,13 @@ impl Sub for Energy {
 #[derive(Debug, thiserror::Error)]
 #[error("Failed to convert {0} to energy.")]
 pub struct EnergyConversionError(f64);
+
 pub trait AsEnergy {
     fn mwh(self) -> Result<Energy, EnergyConversionError>;
 
     fn kwh(self) -> Result<Energy, EnergyConversionError>;
 
     fn wh(self) -> Result<Energy, EnergyConversionError>;
-
 }
 
 impl AsEnergy for f64 {
@@ -88,8 +86,17 @@ impl AsEnergy for f64 {
 
 /* --------------- POWER ------------------- */
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, serde::Deserialize)]
+#[serde(try_from = "f64")]
 pub struct Power(f64);
+
+impl TryFrom<f64> for Power {
+    type Error = f64;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        Self::from_kw(value)
+    }
+}
 
 impl Power {
     pub fn from_kw(power_kw: f64) -> Result<Self, f64> {
@@ -118,7 +125,6 @@ impl Power {
 
     pub fn min(self, other: Power) -> Power {
         Power(self.0.min(other.0))
-
     }
 
     pub fn zero() -> Self {
@@ -128,7 +134,7 @@ impl Power {
 
 #[macro_export]
 macro_rules! kw {
-    ($power_kw:expr) => {{const {Power::from_kw_const($power_kw)}}};
+    ($power_kw:expr) => {{ const { Power::from_kw_const($power_kw) } }};
 }
 
 impl Neg for Power {
@@ -150,7 +156,6 @@ impl Sub for Power {
 #[derive(Debug, thiserror::Error)]
 #[error("Failed to convert {0} to energy.")]
 pub struct PowerConversionError(f64);
-
 
 pub trait AsPower {
     fn mw(self) -> Result<Power, PowerConversionError>;
@@ -174,12 +179,24 @@ impl AsPower for f64 {
 
 /* --------------- DURATION ------------------- */
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, serde::Deserialize)]
+#[serde(try_from = "f64")]
 pub struct Duration(f64);
+
+impl TryFrom<f64> for Duration {
+    type Error = f64;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        Self::from_hour(value)
+    }
+}
 
 impl Duration {
     pub fn from_hour(duration_hour: f64) -> Result<Self, f64> {
-        if duration_hour.is_infinite() || duration_hour.is_nan() || !(MIN_VALUE..=MAX_VALUE).contains(&duration_hour){
+        if duration_hour.is_infinite()
+            || duration_hour.is_nan()
+            || !(MIN_VALUE..=MAX_VALUE).contains(&duration_hour)
+        {
             Err(duration_hour)
         } else {
             Ok(Self(duration_hour))
@@ -205,7 +222,7 @@ impl Duration {
 
 #[macro_export]
 macro_rules! hour {
-    ($hour:expr) => {{const {Duration::from_hour_const($hour)}}};
+    ($hour:expr) => {{ const { Duration::from_hour_const($hour) } }};
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -232,7 +249,6 @@ impl AsDuration for f64 {
     }
 }
 
-
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Efficiency(f64);
 
@@ -240,7 +256,8 @@ impl Efficiency {
     pub fn from_fraction(fraction: f64) -> Result<Self, f64> {
         if fraction.is_infinite() || fraction.is_nan() {
             Err(fraction)
-        } else if fraction <= MIN_VALUE || fraction > 1.0 { // force efficiency in range (0, 1]
+        } else if fraction <= MIN_VALUE || fraction > 1.0 {
+            // force efficiency in range (0, 1]
             Err(fraction)
         } else {
             Ok(Self(fraction))
@@ -255,7 +272,6 @@ impl Efficiency {
         Efficiency(self.0.sqrt())
     }
 }
-
 
 pub trait AsEfficiency {
     fn fraction(self) -> Efficiency;
@@ -291,7 +307,6 @@ impl_display_with_unit!(Power, "kW");
 impl_display_with_unit!(Duration, "hours");
 impl_display_with_unit!(Efficiency, "%");
 
-
 /* Type conversion */
 // Power * Duration = Energy
 impl Mul<Duration> for Power {
@@ -299,8 +314,7 @@ impl Mul<Duration> for Power {
 
     fn mul(self, rhs: Duration) -> Energy {
         // Power (kW) * Duration (hours) = Energy (kWh)
-        Energy::from_kwh(self.0 * rhs.0)
-            .expect("Power * Duration should produce valid Energy")
+        Energy::from_kwh(self.0 * rhs.0).expect("Power * Duration should produce valid Energy")
     }
 }
 
@@ -309,8 +323,7 @@ impl Mul<Power> for Duration {
     type Output = Energy;
 
     fn mul(self, rhs: Power) -> Energy {
-        Energy::from_kwh(self.0 * rhs.0)
-            .expect("Duration * Power should produce valid Energy")
+        Energy::from_kwh(self.0 * rhs.0).expect("Duration * Power should produce valid Energy")
     }
 }
 
@@ -318,8 +331,7 @@ impl Div<Duration> for Energy {
     type Output = Power;
 
     fn div(self, rhs: Duration) -> Power {
-        Power::from_kw(self.0 / rhs.0)
-            .expect("Energy / Duration should produce valid Power")
+        Power::from_kw(self.0 / rhs.0).expect("Energy / Duration should produce valid Power")
     }
 }
 
@@ -327,8 +339,7 @@ impl Div<Efficiency> for Power {
     type Output = Power;
 
     fn div(self, rhs: Efficiency) -> Power {
-        Power::from_kw(self.0 / rhs.0)
-            .expect("Power / Efficiency should produce valid Power")
+        Power::from_kw(self.0 / rhs.0).expect("Power / Efficiency should produce valid Power")
     }
 }
 
@@ -336,8 +347,7 @@ impl Mul<Efficiency> for Power {
     type Output = Power;
 
     fn mul(self, rhs: Efficiency) -> Power {
-        Power::from_kw(self.0 * rhs.0)
-            .expect("Power * Efficiency should produce valid Power")
+        Power::from_kw(self.0 * rhs.0).expect("Power * Efficiency should produce valid Power")
     }
 }
 
@@ -345,18 +355,15 @@ impl Mul<Power> for Efficiency {
     type Output = Power;
 
     fn mul(self, rhs: Power) -> Power {
-        Power::from_kw(self.0 * rhs.0)
-            .expect("Efficiency * Power should produce valid Power")
+        Power::from_kw(self.0 * rhs.0).expect("Efficiency * Power should produce valid Power")
     }
 }
-
 
 impl Div<Efficiency> for Energy {
     type Output = Energy;
 
     fn div(self, rhs: Efficiency) -> Energy {
-        Energy::from_kwh(self.0 / rhs.0)
-            .expect("Energy / Efficiency should produce valid Energy")
+        Energy::from_kwh(self.0 / rhs.0).expect("Energy / Efficiency should produce valid Energy")
     }
 }
 
@@ -364,8 +371,7 @@ impl Mul<Efficiency> for Energy {
     type Output = Energy;
 
     fn mul(self, rhs: Efficiency) -> Energy {
-        Energy::from_kwh(self.0 * rhs.0)
-            .expect("Energy * Efficiency should produce valid Energy")
+        Energy::from_kwh(self.0 * rhs.0).expect("Energy * Efficiency should produce valid Energy")
     }
 }
 
@@ -373,11 +379,9 @@ impl Mul<Energy> for Efficiency {
     type Output = Energy;
 
     fn mul(self, rhs: Energy) -> Energy {
-        Energy::from_kwh(self.0 * rhs.0)
-            .expect("Efficiency * Power should produce valid Power")
+        Energy::from_kwh(self.0 * rhs.0).expect("Efficiency * Power should produce valid Power")
     }
 }
-
 
 pub struct TelemetryPoint {
     duration: Duration,
@@ -387,7 +391,7 @@ pub struct TelemetryPoint {
 
 impl TelemetryPoint {
     pub fn new(duration: Duration, solar_power: Power, load_power: Power) -> Self {
-        TelemetryPoint{
+        TelemetryPoint {
             duration,
             solar_power,
             load_power,
@@ -413,26 +417,27 @@ impl TelemetryPoint {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::{assert_abs_diff_eq};
+    use approx::assert_abs_diff_eq;
     const EPSILON: f64 = 1e-12;
 
     #[test]
     fn test_energy_from_kw_accepts_finite_values() {
-        let e:Energy = Energy::from_kwh(123.45).expect("finite values should be accepted");
-        assert_abs_diff_eq!(e.0, 123.45, epsilon=EPSILON);
+        let e: Energy = Energy::from_kwh(123.45).expect("finite values should be accepted");
+        assert_abs_diff_eq!(e.0, 123.45, epsilon = EPSILON);
 
-        let e:Energy = Energy::from_kwh(-10.0).expect("finite negative values are allowed for Energy");
-        assert_abs_diff_eq!(e.0, -10.0, epsilon=EPSILON);
+        let e: Energy =
+            Energy::from_kwh(-10.0).expect("finite negative values are allowed for Energy");
+        assert_abs_diff_eq!(e.0, -10.0, epsilon = EPSILON);
 
-        let e:Energy = Energy::from_kwh(0.0).expect("zero should be accepted");
-        assert_abs_diff_eq!(e.0, 0.0, epsilon=EPSILON);
+        let e: Energy = Energy::from_kwh(0.0).expect("zero should be accepted");
+        assert_abs_diff_eq!(e.0, 0.0, epsilon = EPSILON);
     }
 
     #[test]
     fn test_energy_to_kw() {
-        let e:Energy = Energy::from_kwh(123.45).expect("finite values should be accepted");
-        let val:f64 = e.as_kwh();
-        assert_abs_diff_eq!(val, 123.45, epsilon=EPSILON);
+        let e: Energy = Energy::from_kwh(123.45).expect("finite values should be accepted");
+        let val: f64 = e.as_kwh();
+        assert_abs_diff_eq!(val, 123.45, epsilon = EPSILON);
     }
 
     #[test]
@@ -454,40 +459,39 @@ mod tests {
 
     #[test]
     fn test_energy_add_energy() {
-        let e:Energy = Energy::from_kwh(4.1).expect("4.1 should be accepted");
-        let e2:Energy = Energy::from_kwh(-5.1).expect("-5.1 should be accepted");
-        let e3:Energy = e + e2;
-        assert_abs_diff_eq!(e3.0, 4.1 - 5.1, epsilon=EPSILON);
+        let e: Energy = Energy::from_kwh(4.1).expect("4.1 should be accepted");
+        let e2: Energy = Energy::from_kwh(-5.1).expect("-5.1 should be accepted");
+        let e3: Energy = e + e2;
+        assert_abs_diff_eq!(e3.0, 4.1 - 5.1, epsilon = EPSILON);
     }
 
     #[test]
     fn test_energy_sub_energy() {
-        let e:Energy = Energy::from_kwh(4.1).expect("4.1 should be accepted");
-        let e2:Energy = Energy::from_kwh(-5.1).expect("-5.1 should be accepted");
-        let e3:Energy = e - e2;
-        assert_abs_diff_eq!(e3.0, 4.1 + 5.1, epsilon=EPSILON);
+        let e: Energy = Energy::from_kwh(4.1).expect("4.1 should be accepted");
+        let e2: Energy = Energy::from_kwh(-5.1).expect("-5.1 should be accepted");
+        let e3: Energy = e - e2;
+        assert_abs_diff_eq!(e3.0, 4.1 + 5.1, epsilon = EPSILON);
     }
 
     #[test]
     fn test_as_energy() {
-        let e:Energy =(1.5).kwh().expect("ok");
-        assert_abs_diff_eq!(e.0, 1.5, epsilon=EPSILON);
+        let e: Energy = (1.5).kwh().expect("ok");
+        assert_abs_diff_eq!(e.0, 1.5, epsilon = EPSILON);
 
-        let e:Energy = (-5.1).kwh().expect("ok");
-        assert_abs_diff_eq!(e.0, -5.1, epsilon=EPSILON);
+        let e: Energy = (-5.1).kwh().expect("ok");
+        assert_abs_diff_eq!(e.0, -5.1, epsilon = EPSILON);
 
-        let e:Energy = (4.2).mwh().expect("ok");
-        assert_abs_diff_eq!(e.0, 4200., epsilon=EPSILON);
+        let e: Energy = (4.2).mwh().expect("ok");
+        assert_abs_diff_eq!(e.0, 4200., epsilon = EPSILON);
 
-        let e:Energy = (-5.1).mwh().expect("ok");
-        assert_abs_diff_eq!(e.0, -5100., epsilon=EPSILON);
+        let e: Energy = (-5.1).mwh().expect("ok");
+        assert_abs_diff_eq!(e.0, -5100., epsilon = EPSILON);
 
-        let e:Energy = (-4.2).wh().expect("ok");
-        assert_abs_diff_eq!(e.0, -4.2e-3, epsilon=EPSILON);
+        let e: Energy = (-4.2).wh().expect("ok");
+        assert_abs_diff_eq!(e.0, -4.2e-3, epsilon = EPSILON);
 
-        let e:Energy = (4.2).wh().expect("ok");
-        assert_abs_diff_eq!(e.0, 4.2e-3, epsilon=EPSILON);
-
+        let e: Energy = (4.2).wh().expect("ok");
+        assert_abs_diff_eq!(e.0, 4.2e-3, epsilon = EPSILON);
     }
 
     #[test]
