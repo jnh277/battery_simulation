@@ -1,0 +1,6 @@
+duration_hour, solar_power_kw, load_power_kw
+0.5, 5., 1.
+0.5, 4., 0.5
+0.5, 2., 2.
+0.5, 0.1, 3.
+0.5, 0., 4.5
