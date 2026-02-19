@@ -32,11 +32,11 @@ pub fn read_telemetry_csv<P: AsRef<Path>> (path: P) -> Result<Vec<TelemetryPoint
         let row_num = idx + 2;
 
         let duration: Duration = Duration::from_hour(row.duration_hour)
-            .map_err(|value:f64| CsvParseError::InvalidDuration { row: row_num, value })?;
+            .map_err(|value: f64| CsvParseError::InvalidDuration { row: row_num, value })?;
         let load_power: Power = Power::from_kw(row.load_power_kw)
-            .map_err(|value:f64| CsvParseError::InvalidLoadPower { row: row_num, value })?;
+            .map_err(|value: f64| CsvParseError::InvalidLoadPower { row: row_num, value })?;
         let solar_power: Power = Power::from_kw(row.solar_power_kw)
-            .map_err(|value:f64| CsvParseError::InvalidSolarPower { row: row_num, value })?;
+            .map_err(|value: f64| CsvParseError::InvalidSolarPower { row: row_num, value })?;
 
         telemetry.push(TelemetryPoint::new(duration, solar_power, load_power));
 
