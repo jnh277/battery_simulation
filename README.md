@@ -1,6 +1,6 @@
 # Battery Simulation in Rust
 
-A battery load-following simulator written in Rust with Python bindings.
+A battery load-following simulator written in Rust with Python bindings. For learning rust and how to integrate it with Python.
 
 ## Project Structure
 
