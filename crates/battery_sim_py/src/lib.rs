@@ -148,6 +148,7 @@ fn extract_results(states: &[BatteryState]) -> (Vec<f64>, Vec<f64>) {
 // ============================================================================
 // Python Function
 // ============================================================================
+type DoublePyArray = PyArray1<f64>;
 
 /// Simulate battery load following behavior.
 ///
@@ -187,7 +188,7 @@ fn simulate_load_following_py<'py>(
     battery: &PyBattery,
     initial_soc_kwh: f64,
     initial_power_kw: f64,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
+) -> PyResult<(Bound<'py, DoublePyArray>, Bound<'py, DoublePyArray>)> {
     // 1. Validate array lengths match
     validate_array_lengths(
         duration_hours.len()?,
