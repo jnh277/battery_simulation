@@ -1,0 +1,13 @@
+[package]
+name = "battery_sim_py"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "battery_sim"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.23", features = ["extension-module"] }
+numpy = "0.23"
+battery_sim = { path = "../battery_sim" }

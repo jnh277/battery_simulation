@@ -1,12 +1,3 @@
-[package]
-name = "battery_sim"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-csv = "1.3"
-serde = { version = "1.0", features = ["derive"] }
-thiserror = { version = "2.0.18", default-features = false, features = ["std"] }
-
-[dev-dependencies]
-approx = "0.6.0-rc1"
+[workspace]
+members = ["crates/battery_sim", "crates/battery_sim_py"]
+resolver = "2"

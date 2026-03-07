@@ -99,6 +99,18 @@ impl Battery {
             Ok(BatteryState::new(state_of_charge, power))
         }
     }
+    pub fn capacity(&self) -> Energy {
+        self.capacity
+    }
+
+    pub fn max_power(&self) -> Power {
+        self.max_power
+    }
+
+    pub fn round_trip_efficiency(&self) -> Efficiency {
+        self.round_trip_efficiency
+    }
+
     pub fn efficiency(&self) -> Efficiency {
         self.round_trip_efficiency.sqrt()
     }
@@ -321,6 +333,27 @@ mod tests {
             .expect("battery should be valid");
         let one_way = battery.efficiency().as_fraction();
         assert_abs_diff_eq!(one_way, 0.9, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_battery_capacity_getter() {
+        let battery = Battery::new(kwh!(100.0), kw!(50.0), 0.81.fraction())
+            .expect("battery should be valid");
+        assert_abs_diff_eq!(battery.capacity().as_kwh(), 100.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_battery_max_power_getter() {
+        let battery = Battery::new(kwh!(100.0), kw!(50.0), 0.81.fraction())
+            .expect("battery should be valid");
+        assert_abs_diff_eq!(battery.max_power().as_kw(), 50.0, epsilon = EPSILON);
+    }
+
+    #[test]
+    fn test_battery_round_trip_efficiency_getter() {
+        let battery = Battery::new(kwh!(100.0), kw!(50.0), 0.81.fraction())
+            .expect("battery should be valid");
+        assert_abs_diff_eq!(battery.round_trip_efficiency().as_fraction(), 0.81, epsilon = EPSILON);
     }
 
     /* --------------- MAX ACHIEVABLE POWER TESTS ------------------- */

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "battery_sim"
+version = "0.1.0"
+description = "Battery simulation library with load-following capabilities"
+requires-python = ">=3.12"
+dependencies = ["numpy>=1.20"]
+
+[project.optional-dependencies]
+dev = ["pandas", "pytest"]
+
+[tool.maturin]
+manifest-path = "crates/battery_sim_py/Cargo.toml"
+module-name = "battery_sim"
+
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "Cargo.toml" },
+    { file = "Cargo.lock" },
+    { file = "crates/*/Cargo.toml" },
+    { file = "crates/*/src/**/*.rs" },
+]
