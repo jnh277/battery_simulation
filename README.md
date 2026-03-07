@@ -103,7 +103,7 @@ uv sync --extra dev
 ### Run Python code
 
 ```bash
-uv run python my_script.py
+uv run python scripts/example.py
 ```
 
 ### Example
