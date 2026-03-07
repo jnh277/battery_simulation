@@ -7,7 +7,10 @@ name = "battery_sim"
 version = "0.1.0"
 description = "Battery simulation library with load-following capabilities"
 requires-python = ">=3.12"
-dependencies = ["numpy>=1.20"]
+dependencies = [
+    "numpy>=1.20",
+    "pandas>=3.0.1",
+]
 
 [project.optional-dependencies]
 dev = ["pandas", "pytest"]

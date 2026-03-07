@@ -162,7 +162,7 @@ impl Battery {
             - actual_power * duration / self.efficiency())
         .max(Energy::zero());
 
-        self.init_state(state_of_charge, actual_power).map_err(BatteryError::ErrorDischarging)
+        self.init_state(state_of_charge, -actual_power).map_err(BatteryError::ErrorDischarging)
     }
 
     pub fn step(
@@ -460,7 +460,7 @@ mod tests {
         let new_state = battery.discharge(&state, kw!(10.0), hour!(1.0)).expect("discharge should succeed");
         let expected_soc = 50.0 - (10.0 / 0.9);
         assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), expected_soc, epsilon = EPSILON);
-        assert_abs_diff_eq!(new_state.power().as_kw(), 10.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), -10.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -470,7 +470,7 @@ mod tests {
         let state = battery.init_state(kwh!(100.0), Power::zero()).expect("valid state");
         // Request 100 kW but max is 50 kW
         let new_state = battery.discharge(&state, kw!(100.0), hour!(1.0)).expect("discharge should succeed");
-        assert_abs_diff_eq!(new_state.power().as_kw(), 50.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), -50.0, epsilon = EPSILON);
     }
 
     #[test]
@@ -642,7 +642,7 @@ mod tests {
         // Discharged at 7 kW for 1 hour with 90% efficiency: 50 - 7 / 0.9 = 42.22 kWh
         let expected_soc = 50.0 - (7.0 / 0.9);
         assert_abs_diff_eq!(new_state.state_of_charge().as_kwh(), expected_soc, epsilon = EPSILON);
-        assert_abs_diff_eq!(new_state.power().as_kw(), 7.0, epsilon = EPSILON);
+        assert_abs_diff_eq!(new_state.power().as_kw(), -7.0, epsilon = EPSILON);
     }
 
     #[test]
