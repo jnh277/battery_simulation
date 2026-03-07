@@ -398,6 +398,13 @@ impl TelemetryPoint {
         self.duration
     }
 
+    pub fn solar_power(&self) -> Power {
+        self.solar_power
+    }
+    pub fn load_power(&self) -> Power {
+        self.load_power
+    }
+
     pub fn excess_pv(&self) -> Power {
         self.solar_power - self.load_power
     }
